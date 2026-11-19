@@ -11,6 +11,11 @@ const client = new Anthropic(); // reads ANTHROPIC_API_KEY from the environment
 const PORT = process.env.PORT || 3000;
 const APP_PASSWORD = process.env.APP_PASSWORD || "";
 const PAGE = fs.readFileSync(path.join(__dirname, "public", "index.html"));
+const KNOWLEDGE_DIR = path.join(__dirname, "knowledge");
+const KNOWLEDGE = fs.existsSync(KNOWLEDGE_DIR)
+  ? fs.readdirSync(KNOWLEDGE_DIR).filter((f) => /\.(md|txt)$/.test(f)).sort()
+      .map((f) => "### " + f + "\n" + fs.readFileSync(path.join(KNOWLEDGE_DIR, f), "utf8")).join("\n\n")
+  : "";
 
 const SYSTEM = `You answer questions for MCOB032 Computer Networks (Sefako Makgatho University; Cisco CCNA 1 Introduction to Networks v7). Reply in plain text only (no markdown tables, no LaTeX, no asterisks).
 Always start with a line "Answer: ..." giving the final answer: for MCQ the correct option(s) written out in full (give all of them when several are required); for true/false "True" or "False"; for calculations the final values; for long questions a one-line summary. Then "Working:" with short numbered steps. For long/scenario questions give about one point per mark, each explained AND applied to the scenario. Keep it concise and exam-ready.
@@ -75,7 +80,11 @@ async function handleAsk(req, res) {
       output_config: { effort: "medium" },
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
-      system: SYSTEM,
+      system: [{
+        type: "text",
+        text: SYSTEM + (KNOWLEDGE ? "\n\nCOURSE MEMOS AND NOTES (the lecturer's marking points; when a question matches or resembles one of these, answer the way the memo does, using its points and wording, but correct any arithmetic errors):\n\n" + KNOWLEDGE : ""),
+        cache_control: { type: "ephemeral" },
+      }],
       messages: toApiMessages(body.turns),
     });
     for await (const event of stream) {
