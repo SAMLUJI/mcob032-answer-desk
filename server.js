@@ -10,6 +10,7 @@ const Anthropic = require("@anthropic-ai/sdk");
 const client = new Anthropic(); // reads ANTHROPIC_API_KEY from the environment
 const PORT = process.env.PORT || 3000;
 const APP_PASSWORD = process.env.APP_PASSWORD || "";
+const FREE_DESK_URL = process.env.FREE_DESK_URL || "https://claude.ai/artifact/CZ9pAQkHkg7fVY7i9kbBsf";
 const PAGE = fs.readFileSync(path.join(__dirname, "public", "index.html"));
 const KNOWLEDGE_DIR = path.join(__dirname, "knowledge");
 const KNOWLEDGE = fs.existsSync(KNOWLEDGE_DIR)
@@ -107,6 +108,11 @@ async function handleAsk(req, res) {
 
 http.createServer(async (req, res) => {
   if (req.method === "GET" && (req.url === "/" || req.url.startsWith("/?"))) {
+    // No API key set: send visitors to the free Answer Desk on claude.ai, which runs on the owner's Claude subscription.
+    if (!process.env.ANTHROPIC_API_KEY) { res.writeHead(302, { Location: FREE_DESK_URL }); res.end(); return; }
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(PAGE); return;
+  }
+  if (req.method === "GET" && req.url === "/api-version") {
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(PAGE); return;
   }
   if (req.method === "GET" && req.url === "/health") { res.writeHead(200); res.end("ok"); return; }
