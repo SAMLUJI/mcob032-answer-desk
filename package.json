@@ -1,0 +1,16 @@
+{
+  "name": "mcob032-answer-desk",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Paste a MCOB032 Computer Networks question, get the answer and working.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.11.0"
+  }
+}
